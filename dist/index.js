@@ -14165,6 +14165,10 @@ async function exportSecrets() {
         if (exportEnv) {
             core.exportVariable(request.envVarName, `${value}`);
         }
+        // var output_value = value
+        // if(isJson(output_value)) {
+        //     output_value = "'" + output_value + "'"
+        // }
         core.setOutput(request.outputVarName, `${value}`);
         core.debug(`✔ ${request.path} => outputs.${request.outputVarName}${exportEnv ? ` | env.${request.envVarName}` : ''}`);
     }
@@ -14283,6 +14287,15 @@ function parseHeadersInput(inputKey, inputOptions) {
             }
             return map;
         }, new Map());
+}
+
+function isJson(string) {
+    try {
+        JSON.parse(string);
+    } catch (e) {
+        return false;
+    }
+    return true;
 }
 
 module.exports = {

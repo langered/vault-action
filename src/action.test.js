@@ -229,8 +229,8 @@ describe('exportSecrets', () => {
 
         await exportSecrets();
 
-        expect(core.exportVariable).toBeCalledWith('TEST_NAME', "{\"first_key\":1,\"second_key\":2}");
-        expect(core.setOutput).toBeCalledWith('TEST_NAME', "{\"first_key\":1,\"second_key\":2}");
+        expect(core.exportVariable).toBeCalledWith('TEST_NAME', '{"first_key":1,"second_key":2}');
+        expect(core.setOutput).toBeCalledWith('TEST_NAME', "'{\"first_key\":1,\"second_key\":2}'");
     });
 
     it('intl secret retrieval', async () => {
