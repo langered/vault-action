@@ -126,18 +126,25 @@ function parseSecretsInput(secretsInput) {
             .map(part => part.trim())
             .filter(part => part.length !== 0);
 
-        if (pathParts.length !== 2) {
-            throw Error(`You must provide a valid path and key. Input: "${secret}"`);
+        if (pathParts.length == 0) {
+            throw Error(`You must provide at least a valid path. Input: "${secret}"`);
+        }
+
+        if (pathParts.length == 1 && renameSigilIndex == -1) {
+            throw Error(`You must provide a valid map name when getting all secrets. Input: "${secret}"`);
         }
 
         const [path, selectorQuoted] = pathParts;
 
         /** @type {any} */
-        const selectorAst = jsonata(selectorQuoted).ast();
-        const selector = selectorQuoted.replace(new RegExp('"', 'g'), '');
+        var selector = ""
+        if (selectorQuoted) {
+            const selectorAst = jsonata(selectorQuoted).ast();
+            selector = selectorQuoted.replace(new RegExp('"', 'g'), '');
 
-        if ((selectorAst.type !== "path" || selectorAst.steps[0].stages) && selectorAst.type !== "string" && !outputVarName) {
-            throw Error(`You must provide a name for the output key when using json selectors. Input: "${secret}"`);
+            if ((selectorAst.type !== "path" || selectorAst.steps[0].stages) && selectorAst.type !== "string" && !outputVarName) {
+                throw Error(`You must provide a name for the output key when using json selectors. Input: "${secret}"`);
+            }
         }
 
         let envVarName = outputVarName;

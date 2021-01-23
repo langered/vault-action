@@ -38,10 +38,15 @@ async function getSecrets(secretRequests, client) {
             body = result.body;
             responseCache.set(requestPath, body);
         }
-        if (!selector.match(/.*[\.].*/)) {
+        if (selector && !selector.match(/.*[\.].*/)) {
             selector = '"' + selector + '"'
         }
-        selector = "data." + selector
+        if(selector == '') {
+            selector = "data"
+        }
+        else {
+            selector = "data." + selector
+        }
         body = JSON.parse(body)
         if (body.data["data"] != undefined) {
             selector = "data." + selector

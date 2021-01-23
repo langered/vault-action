@@ -24,6 +24,16 @@ describe('parseSecretsInput', () => {
         });
     });
 
+    it('parses all secrets to mapped name', () => {
+        const output = parseSecretsInput('test | testName');
+        expect(output).toContainEqual({
+            path: 'test',
+            selector: '',
+            outputVarName: 'testName',
+            envVarName: 'testName'
+        });
+    });
+
     it('parses mapped secret', () => {
         const output = parseSecretsInput('test key|testName');
         expect(output).toHaveLength(1);
@@ -40,7 +50,12 @@ describe('parseSecretsInput', () => {
 
     it('fails on invalid path for mapped', () => {
         expect(() => parseSecretsInput('|testName'))
-            .toThrowError(`You must provide a valid path and key. Input: "|testName"`)
+            .toThrowError(`You must provide at least a valid path. Input: "|testName"`)
+    });
+
+    it('fails on missing map name for all secrets', () => {
+        expect(() => parseSecretsInput('test'))
+            .toThrowError(`You must provide a valid map name when getting all secrets. Input: "test"`)
     });
 
     it('parses multiple secrets', () => {
@@ -56,9 +71,9 @@ describe('parseSecretsInput', () => {
     });
 
     it('parses multiple complex secret input', () => {
-        const output = parseSecretsInput('first a;second b|secondName');
+        const output = parseSecretsInput('first a;second b|secondName;third|thirdName');
 
-        expect(output).toHaveLength(2);
+        expect(output).toHaveLength(3);
         expect(output[0]).toMatchObject({
             outputVarName: 'a',
             envVarName: 'A',
@@ -67,15 +82,20 @@ describe('parseSecretsInput', () => {
             outputVarName: 'secondName',
             envVarName: 'secondName'
         });
+        expect(output[2]).toMatchObject({
+            outputVarName: 'thirdName',
+            envVarName: 'thirdName'
+        });
     });
 
     it('parses multiline input', () => {
         const output = parseSecretsInput(`
         first a;
         second b;
-        third c | SOME_C;`);
+        third c | SOME_C;
+        fourth | SOME_D;`);
 
-        expect(output).toHaveLength(3);
+        expect(output).toHaveLength(4);
         expect(output[0]).toMatchObject({
             path: 'first',
         });
@@ -86,6 +106,10 @@ describe('parseSecretsInput', () => {
         expect(output[2]).toMatchObject({
             outputVarName: 'SOME_C',
             envVarName: 'SOME_C',
+        });
+        expect(output[3]).toMatchObject({
+            outputVarName: 'SOME_D',
+            envVarName: 'SOME_D',
         });
     });
 });
@@ -194,6 +218,19 @@ describe('exportSecrets', () => {
 
         expect(core.exportVariable).toBeCalledWith('KEY', '1');
         expect(core.setOutput).toBeCalledWith('key', '1');
+    });
+
+    it('simple all secret retrieval', async () => {
+        mockInput('test | TEST_NAME');
+        mockVaultData({
+            first_key: 1,
+            second_key: 2
+        });
+
+        await exportSecrets();
+
+        expect(core.exportVariable).toBeCalledWith('TEST_NAME', "{\"first_key\":1,\"second_key\":2}");
+        expect(core.setOutput).toBeCalledWith('TEST_NAME', "{\"first_key\":1,\"second_key\":2}");
     });
 
     it('intl secret retrieval', async () => {
